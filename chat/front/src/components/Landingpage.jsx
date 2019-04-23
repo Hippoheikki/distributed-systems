@@ -38,12 +38,14 @@ class Landingpage extends React.Component {
     connect(event) {
         event.preventDefault();
         const { ip, name } = this.state;
-        const socket = io(ip, {query: `name=${name}`});
+        if (name !== '' || name.replace(/\s/g, '').length) {
+            const socket = io(ip, {query: `name=${name}`});
 
-        socket.on('connect', () => {
-            console.log("connected");
-            this.setState({connected: true, socket: socket});
-        });
+            socket.on('connect', () => {
+                console.log("connected");
+                this.setState({connected: true, socket: socket});
+            });
+        }
     }
 }
 
