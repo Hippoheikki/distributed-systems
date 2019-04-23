@@ -17,7 +17,7 @@ class Landingpage extends React.Component {
 
     render() {
         return this.state.connected ? (
-            <Chat name={this.state.name} socket={this.state.socket} />
+            <Chat name={this.state.name} socket={this.state.socket} dc={() => this.disconnect()} />
         ) : (
             <form onSubmit={event => this.connect(event)}>
               <Input
@@ -33,6 +33,10 @@ class Landingpage extends React.Component {
               <Button primary type="submit">Connect</Button>
             </form>
         );
+    }
+
+    disconnect() {
+        this.setState({ connected: false, socket: null, ip: '', name: '' });
     }
 
     connect(event) {

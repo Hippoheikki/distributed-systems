@@ -1,5 +1,7 @@
 import React from 'react';
-import { Segment, Message, Button, Input, Container } from 'semantic-ui-react';
+import {Button, Input, Feed } from 'semantic-ui-react';
+
+const MessageType = Object.freeze({"normal": 1, "left": 2, "joined": 3});
 
 class Chat extends React.Component {
     constructor(props) {
@@ -12,15 +14,17 @@ class Chat extends React.Component {
             messages: []
         };
 
-        this.state.socket.on("message", (data) => this.receiveMessage(data));
+        this.state.socket.on("message", (data) => this.receiveMessage(data, MessageType.normal));
+        this.state.socket.on("userLeft", (data) => this.receiveMessage(data, MessageType.left));
+        this.state.socket.on("userCon", (data) => this.receiveMessage(data, MessageType.joined));
     }
 
     render() {
         return (
             <>
-              <Segment style={{ overflow: 'auto', maxHeight: 300, minHeight: 300}}>
+              <Feed style={{ overflow: 'auto', maxHeight: 300, minHeight: 300}}>
                 {this.showMessages()}
-              </Segment>
+              </Feed>
               <form onSubmit={event => this.sendMessage(event)}>
                 <Input
                   placeholder='Message'
@@ -36,17 +40,25 @@ class Chat extends React.Component {
 
     disconnect() {
         this.state.socket.disconnect({query: `name: ${this.state.name}`});
+        this.props.dc();
     }
 
     showMessages() {
         let messages = [];
         this.state.messages.forEach(mess => {
-            messages.push(<Container>
-                          <Message key={mess.key} compact>
-                            <Message.Header>{mess.name}</Message.Header>
-                            <p>{mess.text}</p>
-                          </Message>
-                         </Container>);
+            const user = mess.name === this.state.name ? "You" : mess.name;
+            messages.push(<Feed.Event key={mess.key}>
+                            <Feed.Content>
+                              <Feed.Summary>
+                                <Feed.User>{user}</Feed.User> {mess.type}
+                                <Feed.Date>{mess.date}</Feed.Date>
+                              </Feed.Summary>
+                              <Feed.Extra text>
+                                {mess.text}
+                              </Feed.Extra>
+                            </Feed.Content>
+                          </Feed.Event>
+                         );
         });
 
         return messages;
@@ -60,11 +72,29 @@ class Chat extends React.Component {
         }
     }
 
-    receiveMessage(data) {
+    receiveMessage(data, type) {
+        let t;
+        if (type === MessageType.normal) {
+            t = "said";
+        } else if (type === MessageType.left) {
+            t = "left";
+        } else if (type === MessageType.joined) {
+            t = "joined";
+        }
+        const d = data.data;
+
+        console.log(type);
+        const date = new Date(data.date);
+        const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+        const dateLocal = new Date(date.getTime() - offsetMs);
+        const dateStr = dateLocal.toISOString().slice(0, 19).replace(/-/g, "/").replace("T", " ");
+
         const joined = this.state.messages.concat({
-            key: data.name+data.message,
-            name: data.name,
-            text: data.message
+            key: d.name+dateStr,
+            name: d.name,
+            text: d.message,
+            type: t,
+            date: dateStr
         });
         this.setState({ messages: joined });
     }
