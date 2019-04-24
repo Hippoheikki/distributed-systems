@@ -2,17 +2,14 @@ import sys
 import time
 from dicttoxml import dicttoxml
 import xmltodict
+import json
+import msgpack
+import yaml
+import pickle
 
 ROUNDS = 10000
 
-def operation(serialize, deSerialize):
-    obj = {
-        "a": "1",
-        "b": "2",
-        "c": "3",
-        "d": "4"
-    }
-
+def operation(obj, serialize, deSerialize):
     startSe = time.time()
     for i in range(0, ROUNDS):
         ser = serialize(obj)
@@ -23,13 +20,21 @@ def operation(serialize, deSerialize):
         deser = deSerialize(ser)
     endDe = time.time()
 
+    print(obj == deser)
+    print(obj)
+    print(deser)
+
     return [(endSe-startSe) / ROUNDS, (endDe-startDe) / ROUNDS]
 
 def main():
     choice = menu()
 
-    functionList = [[dicttoxml, xmltodict.parse], [], [], [], []]
-    resultSe, resultDe = operation(functionList[choice - 1][0], functionList[choice - 1][1])
+    obj = {}
+    for i in range(10):
+        obj[chr(ord('a') + i)] = str(i)
+
+    functionList = [[dicttoxml, xmltodict.parse], [json.dumps, json.loads], [msgpack.packb, msgpack.unpackb], [yaml.dump, yaml.load], [pickle.dumps, pickle.loads]]
+    resultSe, resultDe = operation(obj, functionList[choice - 1][0], functionList[choice - 1][1])
 
     print("10000 run average: ")
     print("Serialization: " + str(round(resultSe * 1000, 4)) + "ms")
