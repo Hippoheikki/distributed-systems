@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Input, Feed } from 'semantic-ui-react';
+import {Button, Input, Feed, Segment, Container } from 'semantic-ui-react';
 
 const MessageType = Object.freeze({"normal": 1, "left": 2, "joined": 3});
 
@@ -21,10 +21,13 @@ class Chat extends React.Component {
 
     render() {
         return (
-            <>
-              <Feed style={{ overflow: 'auto', maxHeight: 300, minHeight: 300}}>
+            <Container style={{ padding: 10 }}>
+              <Segment style={{ overflow: 'auto', maxHeight: 300, minHeight: 300}}>
+                <Feed>
+                  {this.showMessages()}
+                </Feed>
+              </Segment>
                 {this.showMessages()}
-              </Feed>
               <form onSubmit={event => this.sendMessage(event)}>
                 <Input
                   placeholder='Message'
@@ -34,7 +37,7 @@ class Chat extends React.Component {
                 <Button primary type="submit">Send</Button>
               </form>
               <Button onClick={() => this.disconnect()}>Disconnect</Button>
-            </>
+            </Container>
         );
     }
 
@@ -45,7 +48,8 @@ class Chat extends React.Component {
 
     showMessages() {
         let messages = [];
-        this.state.messages.forEach(mess => {
+        for (let i = this.state.messages.length - 1; i >= 0; i--) {
+            const mess = this.state.messages[i];
             const user = mess.name === this.state.name ? "You" : mess.name;
             messages.push(<Feed.Event key={mess.key}>
                             <Feed.Content>
@@ -59,7 +63,7 @@ class Chat extends React.Component {
                             </Feed.Content>
                           </Feed.Event>
                          );
-        });
+        };
 
         return messages;
     }
