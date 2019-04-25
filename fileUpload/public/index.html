@@ -1,0 +1,73 @@
+<html>
+  <body>
+    <input id="file" type="file" name="csv" />
+    <button onclick="sendFile()">Upload</button>
+    <input id="field" type="text" placeholder="Field name" />
+    <input id="number" type="number" placeholder="Amount" />
+    <button onclick="getData()">Search</button>
+    <div id="records"></div>
+    <div id="uploadStatus"></div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+
+      const getData = async () => {
+          let field = document.getElementById("field").value;
+          let amount = document.getElementById("number").value;
+
+          const url = "/top?field=" + field + "&top=" +amount;
+
+          try {
+              const result = await fetch(url);
+              let json = await result.json();
+              json.forEach(obj => {
+                  let node = document.createElement("p");
+                  let text = document.createTextNode(JSON.stringify(obj));
+                  let parent = document.getElementById("records");
+
+                  node.appendChild(text);
+                  parent.appendChild(node);
+              });
+          } catch (e) {
+              console.log(e);
+          }
+      }
+      
+      const sendFile = () => {
+          console.log("send file");
+
+          let data = new FormData();
+          let file = document.getElementById("file");
+          let fileSplit = file.value.split("\\");
+          let fileName = fileSplit[fileSplit.length - 1];
+
+          console.log(fileName, file, fileSplit);
+          
+          data.append('csv', file.files[0]);
+
+          let div = document.createElement("div");
+
+          let progress = document.createElement("progress");
+          progress.value = 0;
+          progress.max = 100;
+          
+          let name = document.createElement("p");
+          let text = document.createTextNode(fileName + ":");
+
+          let parent = document.getElementById("uploadStatus");
+
+          name.appendChild(text);
+          div.appendChild(name);
+          div.appendChild(progress);
+          parent.appendChild(div);
+
+          const config = {
+              onUploadProgress: (progressEvent) => {
+                  let percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+                  progress.value = percentCompleted;
+              }
+          }
+          axios.post('/upload', data, config);
+      }
+    </script>
+  </body>
+</html>
