@@ -14,3 +14,4 @@ This assignment was done using express with socket.io in the backend and react f
 1. Go to front folder
 2. Run yarn
 3. Run yarn start
+4. Program is running in localhost:3000
